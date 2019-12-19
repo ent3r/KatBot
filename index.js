@@ -8,34 +8,9 @@ const {
 } = require("discord.js");
 const Discord = require("discord.js");
 const client = new Client();
-const ipc = require('node-ipc')
 const serverInfo = require("./serverInfo.js");
 let config = {
   commands: new Collection(),
-}
-
-/**
- * ! This whole IPC thing is a WIP
- */
-ipc.config.id = 'katBot';
-ipc.config.retry = 1000;
-if (process.env.DEV === '1') {
-  ipc.serve(() => {
-    ipc.server.on('guildDataRequest', (data, socket) => {
-      assignData(data);
-      ipc.server.emit(socket, 'guildDataResponse', data);
-    })
-  });
-} else {
-  ipc.serveNet(process.env.HOST, () => {
-    ipc.server.on('guildDataRequest', (data, socket) => {
-      if (data.IPC !== process.env.IPC) ipc.server.emit(socket, 'error', "Not authenticated correctly")
-      else {
-        assignData(data);
-        ipc.server.emit(socket, 'guildDataResponse', data);
-      }
-    })
-  })
 }
 
 client.on("ready", () => {
@@ -154,36 +129,69 @@ let sendEmbed = (channel, message, desc, time) => {
 
 let assignData = data => {
   let newData = data;
-  let g = client.guilds.get(serverInfo.guildId);
-  Object.keys(data).forEach(k => {
-    switch (k) {
-      case 'IPC':
-        delete newData[k];
-        break;
-      case 'guildOwnerId':
-        newData[k] = g.ownerID;
-        break;
-      case 'guildImage':
-        newData[k] = g.iconURL;
-        break;
-      case 'roleCount':
-        newData[k] = g.roles.size;
-        break;
-      case 'textChannelCount':
-        newData[k] = g.channels.filter(c => c.type == "text").size;
-        break;
-      case 'voiceChannelCount':
-        newData[k] = g.channels.filter(c => c.type == "voice").size;
-        break;
-      case 'userCount':
-        newData[k] = g.memberCount;
-        break;
-      case 'guildName':
-        newData[k] = g.name;
-        break;
-    }
-  });
+  try {
+    let g = client.guilds.get(serverInfo.guildId);
+    Object.keys(data).forEach(k => {
+      switch (k) {
+        case 'IPC':
+          delete newData[k];
+          break;
+        case 'guildOwnerId':
+          newData[k] = g.ownerID;
+          break;
+        case 'guildImage':
+          newData[k] = g.iconURL;
+          break;
+        case 'roleCount':
+          newData[k] = g.roles.size;
+          break;
+        case 'textChannelCount':
+          newData[k] = g.channels.filter(c => c.type == "text").size;
+          break;
+        case 'voiceChannelCount':
+          newData[k] = g.channels.filter(c => c.type == "voice").size;
+          break;
+        case 'userCount':
+          newData[k] = g.memberCount;
+          break;
+        case 'guildName':
+          newData[k] = g.name;
+          break;
+      }
+    });
+  } catch(e){
+    console.error(e);
+  }
   return newData;
 }
 
+  /**
+  * ! This whole IPC thing is a WIP
+  */
+if(process.env.IPC_ENABLE == '1'){
+  const ipc = require('node-ipc')
+  ipc.config.id = 'katBot';
+  ipc.config.retry = 1000;
+  if (process.env.DEV === '1') {
+    ipc.serve(() => {
+      ipc.server.on('guildDataRequest', (data, socket) => {
+        assignData(data);
+        ipc.server.emit(socket, 'guildDataResponse', data);
+      })
+    });
+  } else {
+    ipc.serveNet(process.env.HOST, () => {
+      ipc.server.on('guildDataRequest', (data, socket) => {
+        if (data.IPC !== process.env.IPC) ipc.server.emit(socket, 'error', "Not authenticated correctly")
+        else {
+          assignData(data);
+          ipc.server.emit(socket, 'guildDataResponse', data);
+        }
+      })
+    })
+  }
+}
+
+
 client.login(process.env.BOT_TOKEN);
+
