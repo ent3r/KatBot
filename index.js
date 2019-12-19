@@ -15,44 +15,30 @@ let config = {
 }
 
 /**
- * This whole IPC thing is a WIP
+ * ! This whole IPC thing is a WIP
  */
 ipc.config.id = 'katBot';
 ipc.config.retry = 1000;
-ipc.serve(() => {
-  ipc.server.on('guildDataRequest', (data, socket) => {
-    let g = client.guilds.get(serverInfo.guildId);
-    Object.keys(data).forEach(k => {
-      console.log(k);
-      console.log(data[k])
-      switch (k) {
-        case 'guildOwnerId':
-          data[k] = g.ownerID;
-          break;
-        case 'guildImage':
-          data[k] = g.iconURL;
-          break;
-        case 'roleCount':
-          data[k] = g.roles.size;
-          break;
-        case 'textChannelCount':
-          data[k] = g.channels.filter(c => c.type == "text").size;
-          break;
-        case 'voiceChannelCount':
-          data[k] = g.channels.filter(c => c.type == "voice").size;
-          break;
-        case 'userCount':
-          data[k] = g.memberCount;
-          break;
-        case 'guildName':
-          data[k] = g.name;
-          break;
+if(process.env.DEV === '1'){
+  ipc.serve(() => {
+    ipc.server.on('guildDataRequest', (data, socket) => {
+      assignData(data);
+      ipc.server.emit(socket, 'guildDataResponse', data);
+    })
+  });
+} else {
+  ipc.serveNet(() => {
+    ipc.server.on('guildDataRequest', (data, socket) => {
+      if(data.IPC !== process.env.IPC) ipc.server.emit(socket, 'error', "Not authenticated correctly")
+      else {
+        assignData(data);
+        ipc.server.emit(socket, 'guildDataResponse', data);
       }
-    });
-
-    ipc.server.emit(socket, 'guildDataResponse', data);
+    })
   })
-});
+}
+
+
 
 client.on("ready", () => {
   ipc.server.start();
@@ -166,6 +152,37 @@ let sendEmbed = (channel, message, desc, time) => {
         m.delete(time)
     })
     .catch(e => {});
+}
+
+let assignData = data => {
+  let newData = data;
+  let g = client.guilds.get(serverInfo.guildId);
+  Object.keys(data).forEach(k => {
+    switch (k) {
+      case 'guildOwnerId':
+        newData[k] = g.ownerID;
+        break;
+      case 'guildImage':
+        newData[k] = g.iconURL;
+        break;
+      case 'roleCount':
+        newData[k] = g.roles.size;
+        break;
+      case 'textChannelCount':
+        newData[k] = g.channels.filter(c => c.type == "text").size;
+        break;
+      case 'voiceChannelCount':
+        newData[k] = g.channels.filter(c => c.type == "voice").size;
+        break;
+      case 'userCount':
+        newData[k] = g.memberCount;
+        break;
+      case 'guildName':
+        newData[k] = g.name;
+        break;
+    }
+  });
+  return newData;
 }
 
 client.login(process.env.BOT_TOKEN);
