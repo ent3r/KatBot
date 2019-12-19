@@ -9,7 +9,6 @@ For that reason, I've decided to release this and push out my progress as I go a
 Extremely limited, but gives a good baseline for addition of features by others.
 - Commands (!run, !inv)
 - Simple logging
-- node-ipc base setup
   
 
 
@@ -18,10 +17,11 @@ Extremely limited, but gives a good baseline for addition of features by others.
 - Open your preferred command line in the folder where you'd like the project placed in.
 - Clone the repo using `git clone https://github.com/Heijos/KatBot`.
 - Run `npm i` in the root folder of the project
-- Add a `.env` file in the root folder, adding necessary variables into the file in following fashion:
+- Add a `.env` file in the root folder, adding necessary variables into the file in following fashion:\
+  NOTE: the only necessary variables for the bot to run is the BOT_TOKEN
   ```
   BOT_TOKEN=PlaceYourDiscordBotTokenHereWithNoEncapsulation
-  NEXT_VARIABLE=ShouldGoHereLikeThis
+  NEXT_VARIABLE=ShouldGoHereLikeThisIfYouNeedMore
   ```
 - Finally, run `npm start`, and the bot should be running.
 
