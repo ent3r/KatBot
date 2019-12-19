@@ -159,6 +159,7 @@ let assignData = data => {
     switch (k) {
       case 'IPC':
         delete newData[k];
+        break;
       case 'guildOwnerId':
         newData[k] = g.ownerID;
         break;
