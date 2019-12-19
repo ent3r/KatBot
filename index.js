@@ -19,7 +19,7 @@ let config = {
  */
 ipc.config.id = 'katBot';
 ipc.config.retry = 1000;
-if(process.env.DEV === '1'){
+if (process.env.DEV === '1') {
   ipc.serve(() => {
     ipc.server.on('guildDataRequest', (data, socket) => {
       assignData(data);
@@ -27,9 +27,9 @@ if(process.env.DEV === '1'){
     })
   });
 } else {
-  ipc.serveNet(() => {
+  ipc.serveNet(process.env.HOST, () => {
     ipc.server.on('guildDataRequest', (data, socket) => {
-      if(data.IPC !== process.env.IPC) ipc.server.emit(socket, 'error', "Not authenticated correctly")
+      if (data.IPC !== process.env.IPC) ipc.server.emit(socket, 'error', "Not authenticated correctly")
       else {
         assignData(data);
         ipc.server.emit(socket, 'guildDataResponse', data);
@@ -37,8 +37,6 @@ if(process.env.DEV === '1'){
     })
   })
 }
-
-
 
 client.on("ready", () => {
   ipc.server.start();
@@ -108,7 +106,7 @@ async function messageProcess(message) {
           message.member = m;
           if (message.member.roles.has(serverInfo.roles.admin) || message.author.id == serverInfo.devId) message.member.isAdmin = true;
           let cmd = message.content.startsWith(serverInfo.prefix) ? args[0].substring(serverInfo.prefix.length).toLowerCase() : undefined;
-          
+
           /**
            * ! This means the commands are automatically added as the files are added
            * ? I used to have a help command here but I got rid of it when redoing the commands
@@ -159,6 +157,8 @@ let assignData = data => {
   let g = client.guilds.get(serverInfo.guildId);
   Object.keys(data).forEach(k => {
     switch (k) {
+      case 'IPC':
+        delete newData[k];
       case 'guildOwnerId':
         newData[k] = g.ownerID;
         break;
