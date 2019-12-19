@@ -14,7 +14,6 @@ let config = {
 }
 
 client.on("ready", () => {
-  ipc.server.start();
   require('./events/ready').run(client, serverInfo, config);
 });
 
