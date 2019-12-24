@@ -11,7 +11,6 @@ Extremely limited, but gives a good baseline for addition of features by others.
 - Simple logging
   
 
-
 ## Usage
 
 - Open your preferred command line in the folder where you'd like the project placed in.

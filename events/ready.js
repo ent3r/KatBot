@@ -6,7 +6,7 @@
 let fs = require('fs');
 
 module.exports.run = (client, serverInfo, config) => {
-    console.log("KatBot logged in and ready.");
+    console.log("Bot logged in and ready.");
 
     fs.readdir('./cmds', (err, files) => {
         files.forEach(file => {
