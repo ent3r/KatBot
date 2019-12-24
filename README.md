@@ -17,6 +17,7 @@ Extremely limited, but gives a good baseline for addition of features by others.
 - Open your preferred command line in the folder where you'd like the project placed in.
 - Clone the repo using `git clone https://github.com/Heijos/KatBot`.
 - Run `npm i` in the root folder of the project
+- Fill out `serverInfo.js` with the IDs it requires
 - Add a `.env` file in the root folder, adding necessary variables into the file in following fashion:\
   NOTE: the only necessary variables for the bot to run is the BOT_TOKEN
   ```

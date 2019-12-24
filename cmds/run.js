@@ -23,6 +23,6 @@ module.exports = {
         } catch (e) {
           out = e.toString();
         }
-        if (out!=null) client.guilds.get(serverInfo.logserverId).channels.get(serverInfo.channels.runOut).send(out.toString());
+        if (out!=null) message.channel.send(out.toString());
     }
 }

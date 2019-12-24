@@ -16,7 +16,6 @@ module.exports = {
         args
     }) => {
         if (!message.member.isAdmin) return;
-        
 
         message.guild.channels.get(serverInfo.channels.rules).createInvite({maxUses:1, maxAge:0}).then(i => message.channel.send(i.url))
     }

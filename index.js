@@ -90,17 +90,6 @@ async function messageProcess(message) {
             require(`./cmds/${cmd}`).run(data);
           }
         }).catch(e => {});
-      } else if (message.guild.id == serverInfo.logserverId) {
-        /**
-         * ! This was mostly just added as a quick way to check if things work properly
-         */
-        if (message.channel.id == serverInfo.channels.run) {
-          try {
-            require(`./cmds/run`).run(data, true);
-          } catch (error) {
-            console.log(error);
-          }
-        }
       }
     }
   }
