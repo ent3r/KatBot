@@ -8,13 +8,20 @@ const {
 } = require("discord.js");
 const Discord = require("discord.js");
 const client = new Client();
+const mysql = require('mysql');
 const serverInfo = require("./serverInfo.js");
+var pool = mysql.createPool({
+  host : 'localhost',
+  user : process.env.DB_LOGIN,
+  password : process.env.DB_PASS,
+  database : 'bots'
+})
 let config = {
   commands: new Collection(),
 }
 
 client.on("ready", () => {
-  require('./events/ready').run(client, serverInfo, config);
+  require('./events/ready').run(client, serverInfo, config, pool);
 });
 
 client.on("guildMemberAdd", member => {
@@ -26,12 +33,12 @@ client.on("guildMemberRemove", member => {
 });
 
 client.on("message", async message => {
-  if (message.guild.id == serverInfo.guildId) log(`\`${message.content}\` was sent in <#${message.channel.id}>`)
+  if (message.guild.id == serverInfo.guildId && !message.author.bot && message.channel.id != serverInfo.channels.log) log(`\`${message.cleanContent}\` was sent in <#${message.channel.id}>`)
   messageProcess(message);
 });
 
 client.on("messageUpdate", async (oldMessage, newMessage) => {
-  if (newMessage.guild.id == serverInfo.guildId) log(`\`${oldMessage.content}\` -> \`${newMessage.content}\``)
+  if (newMessage.guild.id == serverInfo.guildId && !oldMessage.author.bot && oldMessage.channel.id != serverInfo.channels.log) log(`\`${oldMessage.cleanContent}\` -> \`${newMessage.cleanContent}\` at ${newMessage.url}`)
   messageProcess(newMessage);
 });
 
@@ -51,7 +58,7 @@ function memberLog(user, didJoin) {
  * @param content What to log
  */
 function log(content) {
-  client.guilds.get(serverInfo.logserverId).channels.get(serverInfo.channels.log).send(content);
+  client.channels.get(serverInfo.channels.log).send(content);
 }
 
 /**
@@ -64,7 +71,7 @@ async function messageProcess(message) {
      * ! Self/Bot responses
      */
   } else {
-    var args = message.content.split(/ +/);
+    var args = message.cleanContent.split(/ +/);
     let data = {
       client: client,
       serverInfo: serverInfo,
@@ -73,33 +80,36 @@ async function messageProcess(message) {
       config: config,
       sendEmbed: sendEmbed,
       log: log,
+      pool : pool,
     }
     if (message.channel.type === "text") {
       if (message.guild.id == serverInfo.guildId) {
-        client.guilds.get(serverInfo.guildId).fetchMember(message.author).then(m => {
-          message.member = m;
-          if (message.member.roles.has(serverInfo.roles.admin) || message.author.id == serverInfo.devId) message.member.isAdmin = true;
-          let cmd = message.content.startsWith(serverInfo.prefix) ? args[0].substring(serverInfo.prefix.length).toLowerCase() : undefined;
-
-          /**
-           * ! This means the commands are automatically added as the files are added
-           * ? I used to have a help command here but I got rid of it when redoing the commands
-           * ? and I haven't found the need for a help command yet, might add later?
-           */
-          if (config.commands.has(cmd)) {
-            require(`./cmds/${cmd}`).run(data);
-          }
-        }).catch(e => {});
-      } else if (message.guild.id == serverInfo.logserverId) {
-        /**
-         * ! This was mostly just added as a quick way to check if things work properly
-         */
         if (message.channel.id == serverInfo.channels.run) {
           try {
             require(`./cmds/run`).run(data, true);
           } catch (error) {
             console.log(error);
           }
+        } else if (message.channel.id == serverInfo.channels.log) {
+
+          /**
+           * ! ignore dat shit
+           */
+        } else {
+          client.guilds.get(serverInfo.guildId).fetchMember(message.author).then(m => {
+            message.member = m;
+            if (message.member.roles.has(serverInfo.roles.admin) || message.author.id == serverInfo.devId) message.member.isAdmin = true;
+            let cmd = message.content.startsWith(serverInfo.prefix) ? args[0].substring(serverInfo.prefix.length).toLowerCase() : undefined;
+
+            /**
+             * ! This means the commands are automatically added as the files are added
+             * ? I used to have a help command here but I got rid of it when redoing the commands
+             * ? and I haven't found the need for a help command yet, might add later?
+             */
+            if (config.commands.has(cmd)) {
+              require(`./cmds/${cmd}`).run(data);
+            }
+          }).catch(e => {});
         }
       }
     }
