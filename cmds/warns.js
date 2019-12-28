@@ -1,11 +1,11 @@
 const Discord = require("discord.js");
 module.exports = {
-    title: "Case",
+    title: "Warns",
     details: {
         perms: "Admin",
-        command: "!Case casenumber",
-        cmd: "case",
-        description: `Looks up a case`
+        command: "!warns @user/id",
+        cmd: "warns",
+        description: `Looks up a user's warnings`
     },
 
     run: ({
@@ -17,9 +17,16 @@ module.exports = {
     }) => {
         if (!message.member.isAdmin) return;
         let req = args.slice(1);
-        if (req.length == 1) {
-            let sql = 'SELECT * FROM logs WHERE p_id=? limit 10';
-            let vals = [parseInt(req[0])]
+        if (req.length == 0) {
+            message.channel.send(`No tag/ID provided!\nUsage: \`!warns @user/id\``)
+            console.log(this.details.command);
+            return;
+        }
+
+        let user = message.mentions.users.first() ? message.mentions.users.first().id : req[0];
+        message.guild.fetchMember(user).then(async m => {
+            let sql = 'SELECT * FROM logs WHERE offender_id=? and type=\'warn\' order by p_id desc limit 10';
+            let vals = [m.id]
             sql = require('mysql').format(sql, vals);
             try {
                 pool.query(sql, (err, res, fields) => {
@@ -31,14 +38,25 @@ module.exports = {
                             Object.keys(obj).forEach(key => {
                                 if (obj[key] != null) embed.addField(`${prettify(key)} (${key})`, prettifyDesc(obj, key));
                             })
+                        } else if (res.length == 0) {
+                            embed.addField('No warns found', `User with ID ${m.id} has no warns on record`)
+                        } else {
+                            res.forEach((row, index) => {
+                                embed.addField(`Response row ${index}`, prettifyObj(row))
+                            })
                         }
                         message.channel.send(embed);
                     }
                 })
-            } catch (err) {
-                console.log(err);
+            } catch (e) {
+                console.error(e);
             }
-        };
+        }).catch(e => {
+            if (e.message == "Unknown User") {
+                sendEmbed(message.channel, `Attempted mute of unknown user`, "This user wasn't found in the server.");
+            } else
+                console.log(e);
+        })
     }
 }
 
@@ -57,6 +75,18 @@ let calcTime = time => {
         if (timings[k] >= 1) out += `${(first?'':', ') + timings[k]} ${timings[k]==1?k.substring(0,k.length-1):k}`
     })
     return out;
+}
+
+let prettifyObj = obj => {
+    let out = "";
+    let first = true;
+    Object.keys(obj).forEach(k => {
+        if (obj[k] != null) {
+            out += `${first?``:` | `}${prettify(k)} = ${prettifyDesc(obj, k)}`
+            if (first) first = false;
+        }
+    })
+    return out
 }
 
 let prettify = string => {
