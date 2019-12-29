@@ -15,7 +15,8 @@ module.exports = {
         args,
         pool,
         sendEmbed,
-    }) => {
+    }, isDM) => {
+        if(isDM) return;
         if (!message.member.isAdmin) return;
         let req = args.slice(1);
         if(req.length == 0){

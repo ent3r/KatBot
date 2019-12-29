@@ -14,7 +14,8 @@ module.exports = {
         message,
         client,
         args
-    }) => {
+    }, isDM) => {
+        if(isDM) return;
         if (!message.member.isAdmin) return;
         
 

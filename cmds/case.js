@@ -14,7 +14,8 @@ module.exports = {
         client,
         args,
         pool,
-    }) => {
+    }, isDM) => {
+        if(isDM) return;
         if (!message.member.isAdmin) return;
         let req = args.slice(1);
         if (req.length == 1) {

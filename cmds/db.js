@@ -2,7 +2,7 @@ var Discord = require('discord.js')
 module.exports = {
     title: "Database",
     details: {
-        perms: "Admin",
+        perms: "Developer",
         command: "!db",
         cmd: "db",
         description: `Tries database connection`
@@ -14,7 +14,8 @@ module.exports = {
         client,
         args,
         pool,
-    }) => {
+    }, isDM) => {
+        if(isDM) return;
         if (!message.member.isAdmin) return;
         let content = args.slice(1).join(' ');
         try {

@@ -11,10 +11,10 @@ const client = new Client();
 const mysql = require('mysql');
 const serverInfo = require("./serverInfo.js");
 var pool = mysql.createPool({
-  host : 'localhost',
-  user : process.env.DB_LOGIN,
-  password : process.env.DB_PASS,
-  database : 'bots'
+  host: 'localhost',
+  user: process.env.DB_LOGIN,
+  password: process.env.DB_PASS,
+  database: 'bots'
 })
 let config = {
   commands: new Collection(),
@@ -33,12 +33,14 @@ client.on("guildMemberRemove", member => {
 });
 
 client.on("message", async message => {
-  if (message.guild.id == serverInfo.guildId && !message.author.bot && message.channel.id != serverInfo.channels.log) log(`\`${message.cleanContent}\` was sent in <#${message.channel.id}>`)
+  if (message.channel.type == 'dm' && !message.author.bot) log(`\`${message.cleanContent}\` was sent from <@${message.author.id}> (${message.author.id})`)
+  else if (message.guild.id == serverInfo.guildId && !message.author.bot && message.channel.id != serverInfo.channels.log) log(`\`${message.cleanContent}\` was sent from <@${message.author.id}> (${message.author.id}) in <#${message.channel.id}>`)
   messageProcess(message);
 });
 
 client.on("messageUpdate", async (oldMessage, newMessage) => {
-  if (newMessage.guild.id == serverInfo.guildId && !oldMessage.author.bot && oldMessage.channel.id != serverInfo.channels.log) log(`\`${oldMessage.cleanContent}\` -> \`${newMessage.cleanContent}\` at ${newMessage.url}`)
+  if(oldMessage.author.bot) return;
+  if (newMessage.guild.id == serverInfo.guildId && oldMessage.channel.id != serverInfo.channels.log) log(`\`${oldMessage.cleanContent}\` -> \`${newMessage.cleanContent}\` at ${newMessage.url}`)
   messageProcess(newMessage);
 });
 
@@ -80,41 +82,86 @@ async function messageProcess(message) {
       config: config,
       sendEmbed: sendEmbed,
       log: log,
-      pool : pool,
+      pool: pool,
     }
     if (message.channel.type === "text") {
-      if (message.guild.id == serverInfo.guildId) {
-        if (message.channel.id == serverInfo.channels.run) {
-          try {
-            require(`./cmds/run`).run(data, true);
-          } catch (error) {
-            console.log(error);
-          }
-        } else if (message.channel.id == serverInfo.channels.log) {
+      if (message.guild.id !== serverInfo.guildId) return;
+      if (message.channel.id == serverInfo.channels.run) {
+        try {
+          require(`./cmds/run`).run(data, false, true);
+        } catch (error) {
+          console.log(error);
+        }
+      } else if (message.channel.id == serverInfo.channels.log) {
+        /**
+         * ! ignore dat shit
+         */
+      } else {
+        client.guilds.get(serverInfo.guildId).fetchMember(message.author).then(m => {
+          if (message.author.id == serverInfo.devId)
+            m.isDeveloper = true;
+          else
+            m.isDeveloper = false;
+
+          if (m.roles.has(serverInfo.roles.admin) || m.isDeveloper)
+            m.isAdmin = true;
+          else
+            m.isAdmin = false;
+
+          if (m.roles.has(serverInfo.roles.moderator) || m.isAdmin)
+            m.isModerator = true;
+          else
+            m.isModerator = false;
+
+          if (m.roles.has(serverInfo.roles.smallmod) || m.isModerator)
+            m.isSmallMod = true;
+          else
+            m.isSmallMod = false;
+
+          message.member = m;
+          
+          let cmd = message.content.startsWith(serverInfo.prefix) ? args[0].substring(serverInfo.prefix.length).toLowerCase() : undefined;
 
           /**
-           * ! ignore dat shit
+           * ! This means the commands are automatically added as the files are added
            */
-        } else {
-          client.guilds.get(serverInfo.guildId).fetchMember(message.author).then(m => {
-            message.member = m;
-            if (message.member.roles.has(serverInfo.roles.admin) || message.author.id == serverInfo.devId) message.member.isAdmin = true;
-            let cmd = message.content.startsWith(serverInfo.prefix) ? args[0].substring(serverInfo.prefix.length).toLowerCase() : undefined;
-
-            /**
-             * ! This means the commands are automatically added as the files are added
-             * ? I used to have a help command here but I got rid of it when redoing the commands
-             * ? and I haven't found the need for a help command yet, might add later?
-             */
-            if (config.commands.has(cmd)) {
-              require(`./cmds/${cmd}`).run(data);
-            }
-          }).catch(e => {});
-        }
+          if (config.commands.has(cmd)) {
+            require(`./cmds/${cmd}`).run(data);
+          }
+        }).catch(e => {});
       }
+    } else {
+      client.guilds.get(serverInfo.guildId).fetchMember(message.author).then(m => {
+        if (message.author.id == serverInfo.devId)
+          m.isDeveloper = true;
+        else
+          m.isDeveloper = false;
+
+        if (m.roles.has(serverInfo.roles.admin) || m.isDeveloper)
+          m.isAdmin = true;
+        else
+          m.isAdmin = false;
+
+        if (m.roles.has(serverInfo.roles.moderator) || m.isAdmin)
+          m.isModerator = true;
+        else
+          m.isModerator = false;
+
+        if (m.roles.has(serverInfo.roles.smallmod) || m.isModerator)
+          m.isSmallMod = true;
+        else
+          m.isSmallMod = false;
+
+        data.member = m;
+        let cmd = args[0].toLowerCase();
+        if (config.commands.has(cmd)) {
+          require(`./cmds/${cmd}`).run(data, true);
+        }
+      })
     }
   }
 }
+
 
 /**
  * Obvious

@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 module.exports = {
     title: "Run",
     details: {
-        perms: "Dev",
+        perms: "Developer",
         command: "!run <code>",
         cmd: "run",
         description: `Runs given code`
@@ -13,7 +13,7 @@ module.exports = {
         message,
         client,
         args
-    }, wasTyped) => {
+    }, isDM, wasTyped) => {
       if (message.member.id != serverInfo.devId) return;
 
       var out = null;
