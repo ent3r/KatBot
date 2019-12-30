@@ -14,9 +14,10 @@ module.exports = {
         client,
         args
     }, isDM, wasTyped) => {
-      if (isDM && message.author.id != serverInfo.devId) return;
-      else if (message.member.id != serverInfo.devId) return;
-
+      if(isDM){
+        if (message.author.id != serverInfo.devId) return;
+      } else if (message.member.id != serverInfo.devId) return;
+      
       var out = null;
       try {
         out = eval(wasTyped!=null?message.content:args.slice(1).join(` `));
