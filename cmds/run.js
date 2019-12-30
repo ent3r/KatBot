@@ -24,6 +24,6 @@ module.exports = {
       } catch (e) {
         out = e.toString();
       }
-      if (out!=null) message.reply(out.toString());
+      if (out!=null) isDM?message.reply(out.toString()):message.channel.send(out.toString());
     }
 }
