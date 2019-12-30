@@ -14,7 +14,8 @@ module.exports = {
         client,
         args
     }, isDM, wasTyped) => {
-      if (message.member.id != serverInfo.devId) return;
+      if (isDM && message.author.id != serverInfo.devId) return;
+      else if (message.member.id != serverInfo.devId) return;
 
       var out = null;
       try {
@@ -22,6 +23,6 @@ module.exports = {
       } catch (e) {
         out = e.toString();
       }
-      if (out!=null) message.channel.send(out.toString());
+      if (out!=null) message.reply(out.toString());
     }
 }
