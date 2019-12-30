@@ -19,7 +19,7 @@ module.exports = {
         if (!message.member.isAdmin) return;
         let content = args.slice(1).join(' ');
         try {
-            pool.query(content+' limit 10', (err, res, fields) => {
+            pool.query(content, (err, res, fields) => {
                 if (err) console.log(err);
                 if(Array.isArray(res)){
                     const embed = new Discord.RichEmbed().setColor([26,140,255]).setDescription('Database response');
