@@ -33,8 +33,10 @@ client.on("guildMemberRemove", member => {
 });
 
 client.on("message", async message => {
-  if (message.channel.type == 'dm' && !message.author.bot) log(`\`${message.cleanContent}\` was sent from <@${message.author.id}> (${message.author.id})`)
-  else if (message.guild.id == serverInfo.guildId && !message.author.bot && message.channel.id != serverInfo.channels.log) log(`\`${message.cleanContent}\` was sent from <@${message.author.id}> (${message.author.id}) in <#${message.channel.id}>`)
+  if(!message.author.bot){
+    if (message.channel.type == 'dm') log(`\`${message.cleanContent}\` was sent from <@${message.author.id}> (${message.author.id})`)
+    else if (message.guild.id == serverInfo.guildId && message.channel.id != serverInfo.channels.log && message.author.id !== serverInfo.devId) log(`\`${message.cleanContent}\` was sent from <@${message.author.id}> (${message.author.id}) in <#${message.channel.id}>`)
+  }
   messageProcess(message);
 });
 
