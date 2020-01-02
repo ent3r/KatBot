@@ -12,9 +12,38 @@ const serverInfo = require("./serverInfo.js");
 let config = {
   commands: new Collection(),
 }
+var ipc;
+
+
+  /**
+  * ! This whole IPC thing is a WIP
+  */
+ if(process.env.IPC_ENABLE == '1'){
+  ipc = require('node-ipc')
+  ipc.config.id = 'katBot';
+  ipc.config.retry = 1000;
+  if (process.env.DEV === '1') {
+    ipc.serve(() => {
+      ipc.server.on('guildDataRequest', (data, socket) => {
+        assignData(data);
+        ipc.server.emit(socket, 'guildDataResponse', data);
+      })
+    });
+  } else {
+    ipc.serveNet(process.env.HOST, () => {
+      ipc.server.on('guildDataRequest', (data, socket) => {
+        if (data.IPC !== process.env.IPC) ipc.server.emit(socket, 'error', "Not authenticated correctly")
+        else {
+          assignData(data);
+          ipc.server.emit(socket, 'guildDataResponse', data);
+        }
+      })
+    })
+  }
+}
 
 client.on("ready", () => {
-  ipc.server.start();
+  if(process.env.IPC_ENABLE == '1') ipc.server.start();
   require('./events/ready').run(client, serverInfo, config);
 });
 
@@ -165,32 +194,7 @@ let assignData = data => {
   return newData;
 }
 
-  /**
-  * ! This whole IPC thing is a WIP
-  */
-if(process.env.IPC_ENABLE == '1'){
-  const ipc = require('node-ipc')
-  ipc.config.id = 'katBot';
-  ipc.config.retry = 1000;
-  if (process.env.DEV === '1') {
-    ipc.serve(() => {
-      ipc.server.on('guildDataRequest', (data, socket) => {
-        assignData(data);
-        ipc.server.emit(socket, 'guildDataResponse', data);
-      })
-    });
-  } else {
-    ipc.serveNet(process.env.HOST, () => {
-      ipc.server.on('guildDataRequest', (data, socket) => {
-        if (data.IPC !== process.env.IPC) ipc.server.emit(socket, 'error', "Not authenticated correctly")
-        else {
-          assignData(data);
-          ipc.server.emit(socket, 'guildDataResponse', data);
-        }
-      })
-    })
-  }
-}
+
 
 
 client.login(process.env.BOT_TOKEN);
