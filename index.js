@@ -30,7 +30,7 @@ if(process.env.IPC_ENABLE == '1'){
       })
     });
   } else {
-    ipc.serveNet(process.env.HOST, 8001,  () => {
+    ipc.serveNet(process.env.HOST, 8000,  () => {
       console.log("wow");
       ipc.server.on('guildDataRequest', (data, socket) => {
         if (data.IPC !== process.env.IPC) ipc.server.emit(socket, 'error', "Not authenticated correctly")
@@ -194,9 +194,4 @@ let assignData = data => {
   }
   return newData;
 }
-
-
-
-
 client.login(process.env.BOT_TOKEN);
-
